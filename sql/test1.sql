@@ -1,9 +1,11 @@
+-- create extension timescaledb;
 
 -- \set dataset devices_1.csv
 -- \set dataset devices_1.sql
 -- \set table_name readings
 
 \! pwd
+show search_path;
 
 \unset last_mode
 
