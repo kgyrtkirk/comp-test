@@ -22,7 +22,6 @@ select  :'current_mode' = 'normal' as t_normal,
         :'current_mode' = 'compressed' as t_compressed
         \gset
 
-\! pwd
 \i load.sql
 \i hyper.sql
 \i append.sql
@@ -32,9 +31,13 @@ select  :'current_mode' = 'normal' as t_normal,
 \i append.sql
 \i hyper.sql
 \i append.sql
+\i add_column_nullable.sql
+\i add_column_default.sql
 \i uncompress.sql
 \i compress.sql
+alter table :table_name rename column device_id to device_id2;
 \i append.sql
+-- \i uncompress.sql
 
 \i cmp.sql
 
