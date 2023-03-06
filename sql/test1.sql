@@ -18,5 +18,4 @@ show search_path;
 \set current_mode compressed
 \i test1_int.sql
 
-
-
+\! banner ok
