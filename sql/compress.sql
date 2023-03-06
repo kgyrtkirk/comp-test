@@ -1,4 +1,24 @@
 
+
+drop view if exists hyper_columns;
+create view hyper_columns as 
+    select  i.table_schema,
+            i.table_name,
+            i.column_name,
+            ti.dimension_number,
+            segmentby_column_index,
+            orderby_column_index
+    from information_schema.columns i
+        -- where table_schema = :'current_mode' and table_name=:'table_name'
+        left outer join timescaledb_information.dimensions ti on (i.table_name = ti.hypertable_name and i.table_schema = ti.hypertable_schema and i.column_name = ti. column_name)
+        left outer join timescaledb_information.compression_settings cs on (i.table_name = cs.hypertable_name and i.table_schema = cs.hypertable_schema and i.column_name = cs.attname)
+;
+        -- and column_name not in (select column_name from timescaledb_information.dimensions where hypertable_schema = :'current_mode' and hypertable_name=:'table_name')
+        -- order by column_name
+
+
+
+
 select :step+1 as step \gset
 
 select  :'current_mode' = 'compressed'
