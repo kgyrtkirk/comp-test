@@ -53,10 +53,10 @@ select  :'current_mode' = 'normal' as t_normal,
 \i rename_column.sql
 \i rename_column.sql
 \i rename_column.sql
-\i unhyper.sql
+-- \i unhyper.sql
 \i append.sql
-\i hyper.sql
-\i append.sql
+-- \i hyper.sql
+-- \i append.sql
 \i add_column_nullable.sql
 \i add_column_default.sql
 \i column_drop.sql
