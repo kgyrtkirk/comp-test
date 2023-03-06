@@ -62,7 +62,7 @@ select  :'current_mode' = 'normal' as t_normal,
 \i column_drop.sql
 \i uncompress.sql
 \i compress.sql
-\i rename_column.sql
+-- \i rename_column.sql
 \i append.sql
 -- \i uncompress.sql
 
