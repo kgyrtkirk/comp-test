@@ -1,9 +1,12 @@
--- create extension timescaledb;
--- \set dataset devices_1.csv
--- \set dataset devices_1.sql
--- \set table_name readings
+\set ON_ERROR_STOP 1
+\set ON_ERROR_ROLLBACK 1
 
-\! pwd
+select count(1) < 1 as not_installed from pg_extension where extname='timescaledb' \gset
+\if :not_installed
+    set search_path=public;
+    create extension timescaledb;
+\endif
+
 show search_path;
 
 \unset last_mode

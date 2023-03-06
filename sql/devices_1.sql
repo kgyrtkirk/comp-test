@@ -46,5 +46,6 @@ begin;
     \COPY readings FROM devices_1.csv CSV
     \COPY device_info FROM devices_small_device_info.csv CSV
     alter schema :source_schema rename to devices_1;
+    \set source_schema devices_1
 commit;
 \endif
