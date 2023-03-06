@@ -7,7 +7,13 @@ create view hyper_columns as
             i.column_name,
             ti.dimension_number,
             segmentby_column_index,
-            orderby_column_index
+            orderby_column_index,
+            case
+                when dimension_number is not null then 'dimension'
+                when segmentby_column_index is not null then 'segmentby'
+                when orderby_column_index is not null then 'orderby'
+                else 'normal'
+            end as column_usage
     from information_schema.columns i
         -- where table_schema = :'current_mode' and table_name=:'table_name'
         left outer join timescaledb_information.dimensions ti on (i.table_name = ti.hypertable_name and i.table_schema = ti.hypertable_schema and i.column_name = ti. column_name)
