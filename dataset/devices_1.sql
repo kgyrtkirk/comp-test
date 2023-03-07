@@ -43,8 +43,8 @@ begin;
     CREATE INDEX ON "readings"(device_id, time DESC);
     -- 86400000000 is in usecs and is equal to 1 day
     SELECT create_hypertable('readings', 'time', chunk_time_interval => 86400000000);
-    \COPY readings FROM devices_1.csv CSV
-    \COPY device_info FROM devices_small_device_info.csv CSV
+    \COPY readings FROM dataset/devices_1.csv CSV
+    \COPY device_info FROM dataset/devices_small_device_info.csv CSV
     alter schema :source_schema rename to devices_1;
     \set source_schema devices_1
 commit;
