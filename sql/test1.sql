@@ -1,28 +1,23 @@
 \set ON_ERROR_STOP 1
 \set ON_ERROR_ROLLBACK 1
 
--- create or replace function load_timescaledb() returns void 
--- as
--- $$
--- declare
---     installed integer;
--- begin
---     select count(1) into installed from pg_extension where extname='timescaledb';
---     set search_path=public;
---     if installed < 1 then
---         create extension timescaledb;
---     end if;
--- end;
--- $$ language plpgsql;
-
--- select load_timescaledb();
-
-select count(1) < 1 as not_installed from pg_extension where extname='timescaledb' \gset
-\if :not_installed
+create or replace function load_timescaledb() returns void 
+as
+$$
+declare
+    installed integer;
+begin
+    select count(1) into installed from pg_extension where extname='timescaledb';
     set search_path=public;
-    create extension timescaledb;
-\endif
+    if installed < 1 then
+        create extension timescaledb;
+    end if;
+end;
+$$ language plpgsql;
 
+select load_timescaledb();
+
+\i test_extensions.sql
 
 \i devices_1.sql
 
