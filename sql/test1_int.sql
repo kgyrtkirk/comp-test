@@ -1,5 +1,4 @@
 
-\i devices_1.sql
 
 
 drop schema if exists :current_mode cascade;

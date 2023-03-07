@@ -24,12 +24,14 @@ select count(1) < 1 as not_installed from pg_extension where extname='timescaled
 \endif
 
 
+\i devices_1.sql
+
 \unset last_mode
 \set current_mode normal
-\i test1_int.sql
+\i :test
 \set current_mode hyper
-\i test1_int.sql
+\i :test
 \set current_mode compressed
-\i test1_int.sql
+\i :test
 
 \! banner ok
