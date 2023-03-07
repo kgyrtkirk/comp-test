@@ -1,4 +1,7 @@
 
+\i devices_1.sql
+
+
 drop schema if exists :current_mode cascade;
 create schema :current_mode;
 set search_path=:current_mode,public;
@@ -34,8 +37,6 @@ create view hyper_columns as
         left outer join timescaledb_information.dimensions ti on (i.table_name = ti.hypertable_name and i.table_schema = ti.hypertable_schema and i.column_name = ti. column_name)
         left outer join timescaledb_information.compression_settings cs on (i.table_name = cs.hypertable_name and i.table_schema = cs.hypertable_schema and i.column_name = cs.attname)
 ;
-
-
 
 select  :'current_mode' = 'normal' as t_normal,
         :'current_mode' = 'hyper' as t_hyper,
