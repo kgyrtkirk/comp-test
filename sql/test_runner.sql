@@ -23,10 +23,10 @@ select load_timescaledb();
 
 \unset last_mode
 \set current_mode normal
-\i :test
+\i test_invoker.sql
 \set current_mode hyper
-\i :test
+\i test_invoker.sql
 \set current_mode compressed
-\i :test
+\i test_invoker.sql
 
 \! banner ok
