@@ -17,7 +17,7 @@
             select * from c
     );
 
-    select count(1) as diff_count from diff \gset
+    select count(1) > 0 as diff_count from diff \gset
 
     \if :diff_count
     DO $$ BEGIN RAISE EXCEPTION 'differences found: %',(select count(1) from diff);END $$;
