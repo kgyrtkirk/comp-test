@@ -17,16 +17,16 @@ $$ language plpgsql;
 
 select load_timescaledb();
 
-\i test_extensions.sql
+\ir test_extensions.sql
 
-\i devices_1.sql
+\ir ../dataset/devices_1.sql
 
 \unset last_mode
 \set current_mode normal
-\i test_invoker.sql
+\ir test_invoker.sql
 \set current_mode hyper
-\i test_invoker.sql
+\ir test_invoker.sql
 \set current_mode compressed
-\i test_invoker.sql
+\ir test_invoker.sql
 
 \! banner ok
