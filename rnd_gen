@@ -1,0 +1,17 @@
+#!/bin/bash
+set -e
+
+CNT=${1:-40}
+RANDOM=${2:-1}
+
+steps=(  steps/* )
+nsteps=${#steps[@]}
+cat << EOF
+\i steps/hyper.sql
+\i steps/compress.sql
+
+EOF
+for i in `seq 1 $CNT`;do
+	s=$[ $RANDOM % $nsteps ]
+	echo "\i ${steps[$s]}"
+done
