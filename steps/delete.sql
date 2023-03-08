@@ -1,4 +1,3 @@
-
 select :step+1 as step \gset
 
 \set ratio '1'

@@ -1,4 +1,3 @@
-
 select :step+1 as step \gset
 
 select  :'current_mode' = 'compressed'

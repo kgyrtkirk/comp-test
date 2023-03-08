@@ -1,3 +1,4 @@
+select :step+1 as step \gset
 
 select  :'current_mode' = 'compressed'
     AND is_compressed(:'current_mode',:'table_name') as proceed \gset

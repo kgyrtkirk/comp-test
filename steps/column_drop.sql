@@ -1,4 +1,3 @@
-
 select :step+1 as step \gset
 
 select setseed(1.0/(:step+1));

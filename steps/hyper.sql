@@ -1,3 +1,4 @@
+select :step+1 as step \gset
 
 select :'current_mode' != 'normal' AND NOT is_hypertable(:'current_mode',:'table_name') as proceed \gset
 

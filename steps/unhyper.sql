@@ -1,3 +1,4 @@
+select :step+1 as step \gset
 
 -- https://stackoverflow.com/questions/57910070/convert-hypertable-to-regular-postgres-table
 CREATE TABLE normal_table (LIKE :table_name INCLUDING ALL); -- duplicate table structure

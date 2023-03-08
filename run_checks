@@ -1,0 +1,9 @@
+#!/bin/bash
+set -e
+
+err=0
+for f in steps/*.sql ; do
+	 [ "`head -n1 $f`" != 'select :step+1 as step \gset' ] && echo "$f: missing step increase" && err=1
+done
+
+exit $err
