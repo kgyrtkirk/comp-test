@@ -6,4 +6,13 @@ for f in steps/*.sql ; do
 	 [ "`head -n1 $f`" != 'select :step+1 as step \gset' ] && echo "$f: missing step increase" && err=1
 done
 
+for f in test/*.sql ; do
+	sed -r 's/^.*(steps\/.*.sql)|.*/\1/' $f|while read s;do
+		[ "$s" == "" ] && continue
+		[ -e "$s" ] && continue
+		echo "$f: $s does not exists"
+		err=1
+	done
+done
+
 exit $err
