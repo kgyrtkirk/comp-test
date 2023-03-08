@@ -1,30 +1,44 @@
 
-create view current_mode as select 
+create view current_mode as select 'normal';
 
-create table current_mode(mode text);
 drop function if exists current_mode();
 create or replace function current_mode()
-returns text language plpgsql as $$
-declare
-    ret text;
-    n integer;
-begin
-    select count(1) into n from current_mode;
-    if n!=1 then
-        raise EXCEPTION 'mode is not set correctly';
-    end if;
-    return ret;
-end;
+returns text language sql as $$
+    select * from current_mode
 $$;
-insert into 
 select current_mode();
 
--- create table current_state(mode text, key text, value text);
--- create or replace function get_var(_key text)
--- returns text language sql as $$
---     select value from current_state where key=_key and mode=current_mode();
--- $$;
+create table current_state(mode text, key text, value text);
+create or replace function get_var(_key text)
+returns text language plpgsql stable as $$
+declare 
+    val text;
+begin
+    select value into val from current_state where key=_key and mode=current_mode();
+    if val is null then
+        raise EXCEPTION 'Value of % is unknown!',_key;
+    end if;
+    return val;
 
+end
+$$;
+
+
+create or replace function some1() returns text language plpgsql stable as $$ declare 
+    val text;
+begin
+    select get_var('asd');
+
+    -- select value into val from current_state where key=_key and mode=current_mode();
+    -- if val is null then
+    --     raise EXCEPTION 'Value of % is unknown!',_key;
+    -- end if;
+    -- return val;
+
+end
+$$;
+
+select some1();
 
 
 -- -- select get_var('asd');
