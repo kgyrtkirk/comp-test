@@ -1,10 +1,18 @@
 
-drop function if exists current_mode();
+-- create view current_mode as select 'invalid';
 
-create or replace function load(mode text) returns text language plpgsql volatile as $$ declare 
+-- drop view if exists current_mode;
+-- drop function if exists current_mode();
+
+create or replace function current_mode()
+returns text language sql as $$
+    select * from current_mode
+$$;
+
+create or replace procedure load(mode text) language plpgsql as $$ declare 
     _mode text;
 begin
-    -- mode=current_mode();
+    raise notice 'load: start';
     perform format('drop schema if exists %s cascade',mode);
     perform format('create schema %s',mode);
     perform format('set search_path=%s,public',mode);
@@ -17,7 +25,7 @@ begin
 
     raise notice 'TODO: use perform/etc here?';
     create table main_table as select * from devices_1.readings;
-    return mode;
+    raise notice 'load: end';
 end
 $$;
 
@@ -84,13 +92,15 @@ $$;
 -- \endif
 
 
-select load('normal');
+call load('normal');
+-- select load('normal');
 select current_mode();
 select set_var('asd','1234');
 select set_var('asd','123');
 select get_var('asd');
 select set_var('table_name','readings');
 select set_var('source_schema','devices_1');
+select get_var('table_name');
 
 select hyper();
 select unhyper();
