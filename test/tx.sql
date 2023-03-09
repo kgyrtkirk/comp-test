@@ -1,9 +1,5 @@
 
 drop function if exists current_mode();
-create or replace function current_mode()
-returns text language sql as $$
-    select * from current_mode
-$$;
 
 create or replace function load(mode text) returns text language plpgsql volatile as $$ declare 
     _mode text;
