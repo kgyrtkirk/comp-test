@@ -30,3 +30,5 @@ select load_timescaledb();
 \ir test_invoker.sql
 
 \! banner ok
+
+    -- set search_path=compressed,normal,hyper,public;
