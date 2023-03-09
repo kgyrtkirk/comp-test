@@ -1,23 +1,28 @@
 
--- create view current_mode as select 'invalid';
-
--- drop view if exists current_mode;
--- drop function if exists current_mode();
+drop table if exists current_mode;
 
 create or replace function current_mode()
 returns text language sql as $$
-    select * from current_mode
+    select current_setting('g.mode')
 $$;
 
 create or replace procedure load(mode text) language plpgsql as $$ declare 
     _mode text;
 begin
     raise notice 'load: start';
+    if mode not in ('hyper','normal','compressed') then
+        raise EXCEPTION 'unknown mode: %', mode;
+    end if;
+
     perform format('drop schema if exists %s cascade',mode);
     perform format('create schema %s',mode);
     perform format('set search_path=%s,public',mode);
-    perform format('create view current_mode as select %s',mode);
+    perform set_config('g.mode',mode,false);
+    -- perform format('create view current_mode as select %s',mode);
 
+
+    -- set g.mode=asd;
+    -- perform format('set my.mode=\'%s\'',mode);
     create table current_state(
         mode text, key text, value text,
         UNIQUE(mode,key)
@@ -83,6 +88,7 @@ $$;
 
 
 
+
 -- select :step+1 as step \gset
 
 -- select :'current_mode' != 'normal' AND NOT is_hypertable(:'current_mode',:'table_name') as proceed \gset
@@ -92,20 +98,40 @@ $$;
 -- \endif
 
 
-call load('normal');
+call load(:'current_mode');
 -- select load('normal');
+select :'current_mode';
 select current_mode();
-select set_var('asd','1234');
-select set_var('asd','123');
-select get_var('asd');
-select set_var('table_name','readings');
-select set_var('source_schema','devices_1');
-select get_var('table_name');
-
+-- select * from current_mode;
+-- select set_var('asd','1234');
+-- select set_var('asd','123');
+-- select get_var('asd');
+-- select set_var('table_name','readings');
+-- select set_var('source_schema','devices_1');
+-- select get_var('table_name');
 select hyper();
 select unhyper();
 
 
+
+
+
+-- \i steps/hyper.sql
+-- \i steps/append.sql
+-- \i steps/uncompress.sql
+-- \i steps/compress.sql
+-- \i steps/append.sql
+-- \i steps/column_rename.sql
+-- \i steps/column_rename.sql
+-- \i steps/column_rename.sql
+-- \i steps/column_rename.sql
+-- \i steps/column_rename.sql
+-- \i steps/append.sql
+-- \set step 11
+-- \i steps/column_add_nullable.sql
+-- \i steps/column_add_default.sql
+-- \i steps/uncompress.sql
+-- \i steps/compress.sql
 
 
 -- drop schema if exists :current_mode cascade;
