@@ -12,7 +12,7 @@ select :step+1 as step \gset
 
 create table stage as
 select * from :table_name
-    where md5(extract(epoch from time)::text) < :'ratio';
+    where md5(extract(epoch from time)::text || :'ratio') < :'ratio';
 
 -- push records into the future
 update stage set time = time + (select max(time)-min(time) from stage) + INTERVAL '1 us' + INTERVAL '1 day';

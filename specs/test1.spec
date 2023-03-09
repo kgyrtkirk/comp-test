@@ -19,7 +19,7 @@ step "r" {
 session "s2"
 step "a" {
 	insert into t values (now(),10);
-	select pg_sleep(1);
+--	select pg_sleep(1);
 	insert into t values (now(),11);
 	
 }

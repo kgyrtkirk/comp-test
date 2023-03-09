@@ -1,17 +1,29 @@
 
-create view current_mode as select :'current_mode';
-
 drop function if exists current_mode();
 create or replace function current_mode()
 returns text language sql as $$
     select * from current_mode
 $$;
-select current_mode();
 
-create table current_state(
+create or replace function load(mode text) returns text language plpgsql volatile as $$ declare 
+    _mode text;
+begin
+    -- mode=current_mode();
+    perform format('drop schema if exists %s cascade',mode);
+    perform format('create schema %s',mode);
+    perform format('set search_path=%s,public',mode);
+    perform format('create view current_mode as select %s',mode);
+
+    create table current_state(
         mode text, key text, value text,
         UNIQUE(mode,key)
-);
+    );
+
+    raise notice 'TODO: use perform/etc here?';
+    create table main_table as select * from devices_1.readings;
+    return mode;
+end
+$$;
 
 create or replace function get_var(_key text)
 returns text language plpgsql stable as $$
@@ -35,44 +47,6 @@ begin
     insert into current_state values (current_mode(), _key,_value)
     on conflict(mode,key)
     do update set value=excluded.value;
-end
-$$;
-
-select set_var('asd','1234');
-select set_var('asd','123');
-select get_var('asd');
-
-
-create or replace function some1() returns text language plpgsql volatile as $$ declare 
-    val text;
-begin
-    -- set_var('asd','xxx');
-    -- select get_var('asd');
-    -- set search_path = public;
-    return 'asd';
-end
-$$;
-
-select some1();
-show search_path;
-
-
--- create table :table_name as select * from :source_schema.:table_name;
-
-select set_var('table_name','readings');
-select set_var('source_schema','devices_1');
-
-create or replace function load() returns text language plpgsql volatile as $$ declare 
-    mode text;
-begin
-    mode=current_mode();
-    perform format('drop schema if exists %s cascade',mode);
-    perform format('create schema %s',mode);
-    perform format('set search_path=%s,public',mode);
-
-    raise notice 'TODO: use perform/etc here';
-    create table main_table as select * from devices_1.readings;
-    return mode;
 end
 $$;
 
@@ -104,6 +78,7 @@ $$;
 
 
 
+
 -- select :step+1 as step \gset
 
 -- select :'current_mode' != 'normal' AND NOT is_hypertable(:'current_mode',:'table_name') as proceed \gset
@@ -113,7 +88,14 @@ $$;
 -- \endif
 
 
-select load();
+select load('normal');
+select current_mode();
+select set_var('asd','1234');
+select set_var('asd','123');
+select get_var('asd');
+select set_var('table_name','readings');
+select set_var('source_schema','devices_1');
+
 select hyper();
 select unhyper();
 
