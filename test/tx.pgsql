@@ -1,248 +1,353 @@
+SET search_path = public;
 
-set search_path=public;
+DROP TABLE IF EXISTS current_mode;
 
-drop table if exists current_mode;
-
-create or replace function current_mode()
-returns text language sql as $$
-    select current_setting('g.mode')
+CREATE OR REPLACE FUNCTION current_mode ()
+    RETURNS text
+    LANGUAGE sql
+    AS $$
+    SELECT
+        current_setting('g.mode')
 $$;
 
-create or replace function get_var2(key text)
-returns text language sql as $$
-    select current_setting('g.'|| key)
+CREATE OR REPLACE FUNCTION get_var2 (key text)
+    RETURNS text
+    LANGUAGE sql
+    AS $$
+    SELECT
+        current_setting('g.' || key)
 $$;
 
-create or replace procedure set_var2(key text,value text)
- language sql as $$
-    select set_config('g.'|| key,value,false)
+CREATE OR REPLACE PROCEDURE set_var2 (key text, value text)
+LANGUAGE sql
+AS $$
+    SELECT
+        set_config('g.' || key, value, FALSE)
 $$;
 
-create or replace procedure load(mode text) language plpgsql as $$ declare 
+CREATE OR REPLACE PROCEDURE LOAD (mode text)
+LANGUAGE plpgsql
+AS $$
+DECLARE
     _mode text;
-begin
-    raise notice 'load: start';
-    if mode not in ('hyper','normal','compressed') then
-        raise EXCEPTION 'unknown mode: %', mode;
-    end if;
-
-    execute format('drop schema if exists %s cascade',mode);
-    execute format('create schema %s',mode);
-    execute format('set search_path=%s,public',mode);
-    perform set_config('g.mode',mode,false);
-    call set_var2('step_idx','0');
+BEGIN
+    RAISE NOTICE 'load: start';
+    IF mode NOT IN ('hyper', 'normal', 'compressed') THEN
+        RAISE EXCEPTION 'unknown mode: %', mode;
+    END IF;
+    EXECUTE format('drop schema if exists %s cascade', mode);
+    EXECUTE format('create schema %s', mode);
+    EXECUTE format('set search_path=%s,public', mode);
+    PERFORM
+        set_config('g.mode', mode, FALSE);
+    CALL set_var2 ('step_idx', '0');
     -- perform format('create view current_mode as select %s',mode);
-
-
     -- set g.mode=asd;
     -- perform format('set my.mode=\'%s\'',mode);
-    create table current_state(
-        mode text, key text, value text,
-        UNIQUE(mode,key)
+    CREATE TABLE current_state (
+        mode text,
+        key text,
+        value text,
+        UNIQUE (mode, key )
     );
-
-    raise notice 'TODO: use perform/etc here?';
-    create table main_table as select * from devices_1.readings;
-    raise notice 'load: end';
-end
+    RAISE NOTICE 'todo: use perform/etc here?';
+    CREATE TABLE main_table AS
+    SELECT
+        *
+    FROM
+        devices_1.readings;
+        RAISE NOTICE 'load: end';
+END
 $$;
 
-create or replace function get_var_t(_key text)
-returns text language plpgsql stable as $$
-declare 
+CREATE OR REPLACE FUNCTION get_var_t (_key text)
+    RETURNS text
+    LANGUAGE plpgsql
+    STABLE
+    AS $$
+DECLARE
     val text;
-begin
-    select value into val from current_state where key=_key and mode=current_mode();
-    if val is null then
-        raise EXCEPTION 'Value of % is unknown!',_key;
-    end if;
-    return val;
-
-end
+BEGIN
+    SELECT
+        value INTO val
+    FROM
+        current_state
+    WHERE
+        key = _key
+        AND mode = current_mode ();
+    IF val IS NULL THEN
+        RAISE EXCEPTION 'value of % is unknown!', _key;
+    END IF;
+    RETURN val;
+END
 $$;
 
-create or replace function set_var_t(_key text,_value text)
-returns void language plpgsql volatile as $$
-declare 
+CREATE OR REPLACE FUNCTION set_var_t (_key text, _value text)
+    RETURNS void
+    LANGUAGE plpgsql
+    VOLATILE
+    AS $$
+DECLARE
     val text;
-begin
-    insert into current_state values (current_mode(), _key,_value)
-    on conflict(mode,key)
-    do update set value=excluded.value;
-end
+BEGIN
+    INSERT INTO current_state
+        VALUES (current_mode (), _key, _value)
+    ON CONFLICT (mode, key)
+        DO UPDATE SET
+            value = excluded.value;
+END
 $$;
 
 -- drop function s_hyper();
-create or replace procedure s_hyper() language plpgsql as $$ declare 
+CREATE OR REPLACE PROCEDURE s_hyper ()
+LANGUAGE plpgsql
+AS $$
+DECLARE
     mode text;
     msg text;
-begin
-    mode=current_mode();
-    if mode != 'normal' AND NOT is_hypertable(mode,'main_table') then
-        select create_hypertable('main_table', 'time', chunk_time_interval => interval '12 hour', migrate_data=>true) into msg;
-        raise notice 'create_hypertable: %',msg;
-    end if;
-end
+BEGIN
+    mode = current_mode ();
+    IF mode != 'normal' AND NOT is_hypertable (mode, 'main_table') THEN
+        SELECT
+            create_hypertable ('main_table', 'time', chunk_time_interval => interval '12 hour', migrate_data => TRUE) INTO msg;
+        RAISE NOTICE 'create_hypertable: %', msg;
+    END IF;
+END
 $$;
 
-create or replace function s_unhyper() returns text language plpgsql volatile as $$ declare 
+CREATE OR REPLACE FUNCTION s_unhyper ()
+    RETURNS text
+    LANGUAGE plpgsql
+    VOLATILE
+    AS $$
+DECLARE
     mode text;
-begin
-    mode=current_mode();
-    if is_hypertable(mode,'main_table') then
+BEGIN
+    mode = current_mode ();
+    IF is_hypertable (mode, 'main_table') THEN
         -- https://stackoverflow.com/questions/57910070/convert-hypertable-to-regular-postgres-table
-        CREATE TABLE normal_table (LIKE main_table INCLUDING ALL);
-        INSERT INTO normal_table (SELECT * FROM main_table);
-        DROP TABLE main_table; -- drops hypertable
-        ALTER TABLE normal_table RENAME TO main_table;
-    end if;
-    return 'unhyper';
-end
+        CREATE TABLE normal_table (
+            LIKE main_table INCLUDING ALL
+        );
+    INSERT INTO normal_table (
+        SELECT
+            *
+        FROM
+            main_table);
+    DROP TABLE main_table;
+    ALTER TABLE normal_table RENAME TO main_table;
+END IF;
+    RETURN 'unhyper';
+END
 $$;
 
-
-create or replace procedure s_append() language plpgsql as $$ declare 
+CREATE OR REPLACE PROCEDURE s_append ()
+LANGUAGE plpgsql
+AS $$
+DECLARE
     mode text;
     ratio text;
     step_idx text;
-begin
-    mode=current_mode();
-    step_idx=get_var2('step_idx');
-    ratio='1';
-
-    create table stage as
-    select * from main_table
-        where md5(extract(epoch from time)::text || step_idx) < ratio;
-
+BEGIN
+    mode = current_mode ();
+    step_idx = get_var2 ('step_idx');
+    ratio = '1';
+    CREATE TABLE stage AS
+    SELECT
+        *
+    FROM
+        main_table
+    WHERE
+        md5(extract(epoch FROM time)::text || step_idx) < ratio;
     -- push records into the future
-    update stage set time = time + (select max(time)-min(time) from stage) + INTERVAL '1 us' + INTERVAL '1 day';
-
-    insert into main_table select * from stage;
-
-    drop table stage;
-end
+    UPDATE
+        stage
+    SET
+        time = time + (
+            SELECT
+                max(time) - min(time)
+            FROM
+                stage) + interval '1 us' + interval '1 day';
+    INSERT INTO main_table
+    SELECT
+        *
+    FROM
+        stage;
+    DROP TABLE stage;
+END
 $$;
 
-create or replace procedure s_uncompress() language plpgsql as $$ declare 
+CREATE OR REPLACE PROCEDURE s_uncompress ()
+LANGUAGE plpgsql
+AS $$
+DECLARE
     mode text;
-begin
-    mode=current_mode();
-    if is_compressed(mode,'main_table') then
-        perform decompress_chunk(show_chunks('main_table'),true);
-        ALTER TABLE main_table SET (timescaledb.compress=false);
-    end if;
-end
+BEGIN
+    mode = current_mode ();
+    IF is_compressed (mode, 'main_table') THEN
+        PERFORM
+            decompress_chunk (show_chunks ('main_table'), TRUE);
+        ALTER TABLE main_table SET (timescaledb.compress = FALSE);
+    END IF;
+END
 $$;
 
-create or replace procedure s_compress() language plpgsql as $$ declare 
+CREATE OR REPLACE PROCEDURE s_compress ()
+LANGUAGE plpgsql
+AS $$
+DECLARE
     mode text;
     step_idx integer;
-    p_segmentby float=.17;
-    p_orderby float=.13;
+    p_segmentby float =.17;
+    p_orderby float =.13;
     compress_options record;
-begin
-    mode=current_mode();
-    step_idx=get_var2('step_idx');
-
-
-    if  mode = 'compressed' 
-    AND is_hypertable(mode,'main_table')
-    AND NOT is_compressed(mode,'main_table') then
-
-    execute setseed(1.0/(step_idx+1));
-    with g as (
-        select column_name from hyper_columns
-            where table_schema = mode and table_name='main_table' and column_usage ='normal'
-        order by column_name
-    ),
-    h as (select random() v,column_name from g)
-    select 
-        (select coalesce(string_agg(column_name,','),'') from h where v<p_segmentby) as segmentby,
-        (select coalesce(string_agg(column_name,','),'') from h where v between p_segmentby and p_segmentby + p_orderby) as orderby
-            into compress_options;
-
-    raise notice 'compress options: segmentby=% , orderby=% ',compress_options.segmentby,compress_options.orderby;
-
-    execute format('
-        ALTER TABLE main_table SET (
+BEGIN
+    mode = current_mode ();
+    step_idx = get_var2 ('step_idx');
+    IF mode = 'compressed' AND is_hypertable (mode, 'main_table') AND NOT is_compressed (mode, 'main_table') THEN
+        EXECUTE setseed(1.0 / (step_idx + 1));
+        WITH g AS (
+            SELECT
+                column_name
+            FROM
+                hyper_columns
+            WHERE
+                table_schema = mode
+                AND table_name = 'main_table'
+                AND column_usage = 'normal'
+            ORDER BY
+                column_name
+),
+h AS (
+    SELECT
+        random() v,
+    column_name
+FROM
+    g
+)
+SELECT
+    (
+        SELECT
+            coalesce(string_agg(column_name, ','), '')
+        FROM
+            h
+        WHERE
+            v < p_segmentby) AS segmentby,
+    (
+        SELECT
+            coalesce(string_agg(column_name, ','), '')
+        FROM
+            h
+        WHERE
+            v BETWEEN p_segmentby AND p_segmentby + p_orderby) AS orderby INTO compress_options;
+        RAISE NOTICE 'compress options: segmentby=% , orderby=% ', compress_options.segmentby, compress_options.orderby;
+        EXECUTE format('
+        alter table main_table set (
             timescaledb.compress,
             timescaledb.compress_segmentby = ''%s'',
-            timescaledb.compress_orderby = ''%s'')',compress_options.segmentby,compress_options.orderby);
-
-        perform compress_chunk(show_chunks('main_table'));
-    end if;
-
-end
+            timescaledb.compress_orderby = ''%s'')', compress_options.segmentby, compress_options.orderby);
+        PERFORM
+            compress_chunk (show_chunks ('main_table'));
+END IF;
+END
 $$;
 
-drop  function if exists step_state(name text);
+DROP FUNCTION IF EXISTS step_state (name text);
+
 -- create or replace function step_state(name text) returns table  ( mode text,step_idx integer) language plpgsql as $$
-create or replace function step_state(name text) returns record language plpgsql as $$
-declare
+CREATE OR REPLACE FUNCTION step_state (name text)
+    RETURNS record
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
     ret record;
     step integer;
-begin
-    step=get_var2('step_idx')::integer + 1;
-    call set_var2('step_idx',step::text);
-    select current_mode() as mode,step as step_idx into ret;
-    raise notice 'asd %',ret;
-    return ret;
-end
-$$
-;
+BEGIN
+    step = get_var2 ('step_idx')::integer + 1;
+    CALL set_var2 ('step_idx', step::text);
+    SELECT
+        current_mode () AS mode,
+        step AS step_idx INTO ret;
+    RAISE NOTICE 'asd %', ret;
+    RETURN ret;
+END
+$$;
 
-create or replace procedure s_column_rename() language plpgsql as $$ declare 
+CREATE OR REPLACE PROCEDURE s_column_rename ()
+LANGUAGE plpgsql
+AS $$
+DECLARE
     state record;
     col text;
-begin
+BEGIN
     -- select (step_state('column_rename')) into state;
-    select * into state from step_state('column_rename') as f(mode text,step_idx integer);
-
-    perform setseed(1.0/(state.step_idx));
-
-    select column_name into col from hyper_columns
-        where table_schema = state.mode and table_name='main_table' -- and column_usage ='normal'
-        order by random() limit 1;
-
-    execute format('alter table main_table rename %s to new_col_%s',col,state.step_idx);
-
-end
+    SELECT
+        * INTO state
+    FROM
+        step_state ('column_rename') AS f (mode text,
+        step_idx integer);
+    PERFORM
+        setseed(1.0 / (state.step_idx));
+    SELECT
+        column_name INTO col
+    FROM
+        hyper_columns
+    WHERE
+        table_schema = state.mode
+        AND table_name = 'main_table' -- and column_usage ='normal'
+    ORDER BY
+        random()
+    LIMIT 1;
+    EXECUTE format('alter table main_table rename %s to new_col_%s', col, state.step_idx);
+END
 $$;
 
-
-
-create or replace procedure s_column_add_nullable() language plpgsql as $$ declare 
+CREATE OR REPLACE PROCEDURE s_column_add_nullable ()
+LANGUAGE plpgsql
+AS $$
+DECLARE
     state record;
     col text;
-begin
-    select * into state from step_state('column_rename') as f(mode text,step_idx integer);
-    execute format('alter table main_table add column new_col_%s integer',state.step_idx);
-end
+BEGIN
+    SELECT
+        * INTO state
+    FROM
+        step_state ('column_rename') AS f (mode text,
+        step_idx integer);
+    EXECUTE format('alter table main_table add column new_col_%s integer', state.step_idx);
+END
 $$;
 
-create or replace procedure s_column_add_default() language plpgsql as $$ declare 
+CREATE OR REPLACE PROCEDURE s_column_add_default ()
+LANGUAGE plpgsql
+AS $$
+DECLARE
     state record;
     col text;
-begin
-    select * into state from step_state('column_rename') as f(mode text,step_idx integer);
-    execute format('alter table main_table add column new_col_%s integer not null default %s',state.step_idx,state.step_idx);
-end
+BEGIN
+    SELECT
+        * INTO state
+    FROM
+        step_state ('column_rename') AS f (mode text,
+        step_idx integer);
+    EXECUTE format('alter table main_table add column new_col_%s integer not null default %s', state.step_idx, state.step_idx);
+END
 $$;
-
 
 -- select :step+1 as step \gset
-
--- select :'current_mode' != 'normal' AND NOT is_hypertable(:'current_mode',:'table_name') as proceed \gset
-
+-- select :'current_mode' != 'normal' and not is_hypertable(:'current_mode',:'table_name') as proceed \gset
 -- \if :proceed
---     SELECT create_hypertable(:'table_name', 'time', chunk_time_interval => interval '12 hour', migrate_data=>true);
+--     select create_hypertable(:'table_name', 'time', chunk_time_interval => interval '12 hour', migrate_data=>true);
 -- \endif
+CALL LOAD (:'current_mode');
 
-
-call load(:'current_mode');
 -- select load('normal');
-select :'current_mode';
-select current_mode();
+SELECT
+    :'current_mode';
+
+SELECT
+    current_mode ();
+
 -- select * from current_mode;
 -- select set_var('asd','1234');
 -- select set_var('asd','123');
@@ -250,25 +355,43 @@ select current_mode();
 -- select set_var('table_name','readings');
 -- select set_var('source_schema','devices_1');
 -- select get_var('table_name');
-call s_hyper();
-call s_append();
-call s_uncompress();
-call s_compress();
-call s_append();
-call s_append();
-call s_append();
-call s_column_rename();
-call s_column_rename();
-call s_column_rename();
-call s_column_rename();
-call s_column_rename();
-call s_column_rename();
-call s_append();
-call s_column_add_nullable();
-call s_column_add_default();
-call s_column_add_default();
-call s_uncompress();
-call s_compress();
+CALL s_hyper ();
+
+CALL s_append ();
+
+CALL s_uncompress ();
+
+CALL s_compress ();
+
+CALL s_append ();
+
+CALL s_append ();
+
+CALL s_append ();
+
+CALL s_column_rename ();
+
+CALL s_column_rename ();
+
+CALL s_column_rename ();
+
+CALL s_column_rename ();
+
+CALL s_column_rename ();
+
+CALL s_column_rename ();
+
+CALL s_append ();
+
+CALL s_column_add_nullable ();
+
+CALL s_column_add_default ();
+
+CALL s_column_add_default ();
+
+CALL s_uncompress ();
+
+CALL s_compress ();
 
 -- \i steps/append.sql
 -- \set step 11
@@ -276,27 +399,21 @@ call s_compress();
 -- \i steps/column_add_default.sql
 -- \i steps/uncompress.sql
 -- \i steps/compress.sql
-
-
 -- drop schema if exists :current_mode cascade;
 -- create schema :current_mode;
 -- set search_path=:current_mode,public;
-
 -- select *,t_normal or t_hyper or t_compressed as ok from (
 --     select  :'current_mode' = 'normal' as t_normal,
 --             :'current_mode' = 'hyper' as t_hyper,
 --             :'current_mode' = 'compressed' as t_compressed
 -- ) t \gset
-
 -- -- select :t_normal or :t_hyper or :t_compressed as ok \gset
 -- \if :ok
 -- \else
---     DO $$ BEGIN RAISE EXCEPTION 'invalid mode: %',:'current_mode';END $$;
+--     do $$ begin raise exception 'invalid mode: %',:'current_mode';end $$;
 -- \endif
-
 -- -- run the main test steps
 -- \ir load.sql
 -- \i test/:test
 -- \ir cmp.sql
-
 -- \set last_mode :current_mode
