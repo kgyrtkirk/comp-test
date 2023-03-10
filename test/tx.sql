@@ -113,11 +113,11 @@ begin
     ratio='1';
         -- start transaction;
     create temporary  table stage as
-        select * from devices_1.readings
+        select * from main_table
             where md5(extract(epoch from time)::text || step_idx) < ratio;
 
     -- push records into the future
-    update stage set time = time + ((select max(time) from main_table) - (select min(time) from stage)) + INTERVAL '1 us' + INTERVAL '1 day';
+    update stage set time = time + (select max(time)-min(time) from stage) + INTERVAL '1 us' + INTERVAL '1 day';
 
     insert into main_table select * from stage;
 
@@ -242,6 +242,45 @@ $$;
 -- \endif
 
 
+create or replace procedure compare(t1 text,t2 text) language plpgsql as $$ declare 
+    state record;
+    col text;
+    diff_count integer;
+begin
+    drop table if exists diff;
+    drop view if exists diff_l;
+    drop view if exists diff_r;
+    execute format('create view diff_l as select * from %s.main_table',t1);
+    execute format('create view diff_r as select * from %s.main_table',t2);
+
+    create table diff as
+    with
+        c as (select count(1) over (partition by time,c),* from diff_l c),
+        l as (select count(1) over (partition by time,c),* from diff_r c)
+    (
+            select * from c
+        except
+            select * from l
+    )
+    union all
+    (
+            select * from l
+        except
+            select * from c
+    );
+
+    select count(1) into diff_count from diff;
+
+    if diff_count > 0 then
+        -- perform select * from diff d order by d limit 4;
+        RAISE EXCEPTION 'differences found: %',diff_count;
+    end if;
+end
+$$;
+
+
+
+
 call load(:'current_mode');
 -- select load('normal');
 select :'current_mode';
@@ -272,6 +311,12 @@ call s_column_add_default();
 call s_column_add_default();
 call s_uncompress();
 call s_compress();
+
+\if :{?last_mode}
+
+call compare(:'last_mode',:'current_mode');
+
+\endif
 
 -- \i steps/append.sql
 -- \set step 11
