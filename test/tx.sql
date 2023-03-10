@@ -72,14 +72,16 @@ begin
 end
 $$;
 
-create or replace function s_hyper() returns text language plpgsql volatile as $$ declare 
+-- drop function s_hyper();
+create or replace procedure s_hyper() language plpgsql as $$ declare 
     mode text;
+    msg text;
 begin
     mode=current_mode();
     if mode != 'normal' AND NOT is_hypertable(mode,'main_table') then
-        return create_hypertable('main_table', 'time', chunk_time_interval => interval '12 hour', migrate_data=>true);
+        select create_hypertable('main_table', 'time', chunk_time_interval => interval '12 hour', migrate_data=>true) into msg;
+        raise notice 'create_hypertable: %',msg;
     end if;
-    return mode;
 end
 $$;
 
@@ -248,7 +250,7 @@ select current_mode();
 -- select set_var('table_name','readings');
 -- select set_var('source_schema','devices_1');
 -- select get_var('table_name');
-select s_hyper();
+call s_hyper();
 call s_append();
 call s_uncompress();
 call s_compress();
