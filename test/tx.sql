@@ -111,11 +111,10 @@ begin
     mode=current_mode();
     step_idx=get_var2('step_idx');
     ratio='1';
-
-    start transaction;
-    create temporary table stage as
-    select * from main_table
-        where md5(extract(epoch from time)::text || step_idx) < ratio;
+        -- start transaction;
+    create temporary  table stage as
+        select * from devices_1.readings
+            where md5(extract(epoch from time)::text || step_idx) < ratio;
 
     -- push records into the future
     update stage set time = time + (select max(time)-min(time) from stage) + INTERVAL '1 us' + INTERVAL '1 day';
@@ -123,7 +122,7 @@ begin
     insert into main_table select * from stage;
 
     drop table stage;
-    commit;
+    -- commit;
 end
 $$;
 
