@@ -17,6 +17,7 @@ select *,t_normal or t_hyper or t_compressed as ok from (
 -- run the main test steps
 -- \ir load.sql
 \i test/:test
--- \ir cmp.sql
+\set table_name main_table
+\ir cmp.sql
 
 \set last_mode :current_mode
