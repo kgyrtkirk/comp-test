@@ -18,6 +18,15 @@ create or replace procedure set_var2(key text,value text)
     select set_config('g.'|| key,value,false)
 $$;
 
+create or replace procedure switch_to(mode text) language plpgsql as $$ declare 
+    _mode text;
+begin
+    execute format('set search_path=%s,public',mode);
+    perform set_config('g.mode',mode,false);
+    call set_var2('step_idx','0');
+end
+$$;
+
 create or replace procedure load(mode text) language plpgsql as $$ declare 
     _mode text;
 begin
@@ -28,9 +37,8 @@ begin
 
     execute format('drop schema if exists %s cascade',mode);
     execute format('create schema %s',mode);
-    execute format('set search_path=%s,public',mode);
-    perform set_config('g.mode',mode,false);
-    call set_var2('step_idx','0');
+
+    call switch_to(mode);
     -- perform format('create view current_mode as select %s',mode);
 
 
