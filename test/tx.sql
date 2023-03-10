@@ -112,7 +112,8 @@ begin
     step_idx=get_var2('step_idx');
     ratio='1';
 
-    create table stage as
+    start transaction;
+    create temporary table stage as
     select * from main_table
         where md5(extract(epoch from time)::text || step_idx) < ratio;
 
@@ -122,6 +123,7 @@ begin
     insert into main_table select * from stage;
 
     drop table stage;
+    commit;
 end
 $$;
 
