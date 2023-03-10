@@ -1,12 +1,20 @@
 
 setup {
-	create table t as select now() as t,0 as v;
-	create table t2 as select now() as t,0 as v;
+	call load('normal');
+	call load('hyper');
+	call load('compressed');
 }
+
+session "s0"
+setup {
+	call use('normal');
+}
+step "s0_append" { call s_append(); }
+
+
 
 session "s1"
 step "b" {
-	--select pg_sleep(.1);
 	insert into t2 values (now(),2);
 }
 session "s3"

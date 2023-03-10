@@ -91,10 +91,12 @@ begin
     mode=current_mode();
     if is_hypertable(mode,'main_table') then
         -- https://stackoverflow.com/questions/57910070/convert-hypertable-to-regular-postgres-table
+        start transaction;
         CREATE TABLE normal_table (LIKE main_table INCLUDING ALL);
         INSERT INTO normal_table (SELECT * FROM main_table);
         DROP TABLE main_table; -- drops hypertable
         ALTER TABLE normal_table RENAME TO main_table;
+        commit;
     end if;
     return 'unhyper';
 end
