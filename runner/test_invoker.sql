@@ -14,6 +14,8 @@ select *,t_normal or t_hyper or t_compressed as ok from (
     DO $$ BEGIN RAISE EXCEPTION 'invalid mode: %',:'current_mode';END $$;
 \endif
 
+
+
 -- run the main test steps
 -- \ir load.sql
 \i test/:test

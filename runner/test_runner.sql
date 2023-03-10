@@ -19,6 +19,10 @@
 
 \ir information_schema_ext.sql
 
+set search_path=public;
+
+\i test/framework.pgsql
+
 \ir ../dataset/devices_1.sql
 
 \unset last_mode
