@@ -17,7 +17,7 @@ $$ language plpgsql;
 
 select load_timescaledb();
 
-\ir test_extensions.sql
+\ir information_schema_ext.sql
 
 \ir ../dataset/devices_1.sql
 
