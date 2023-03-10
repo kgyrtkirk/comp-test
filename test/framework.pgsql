@@ -1,5 +1,4 @@
 
-
 create or replace function current_mode()
 returns text language sql as $$
     select current_setting('g.mode')
@@ -80,7 +79,8 @@ end
 $$;
 
 -- drop function s_hyper();
-create or replace procedure s_hyper() language plpgsql as $$ declare 
+create or replace procedure s_hyper() language plpgsql as $$
+declare 
     mode text;
     msg text;
 begin
@@ -92,7 +92,8 @@ begin
 end
 $$;
 
-create or replace function s_unhyper() returns text language plpgsql volatile as $$ declare 
+create or replace function s_unhyper() returns text language plpgsql volatile as $$
+declare 
     mode text;
 begin
     mode=current_mode();
@@ -110,7 +111,8 @@ end
 $$;
 
 
-create or replace procedure s_append() language plpgsql as $$ declare 
+create or replace procedure s_append() language plpgsql as $$
+declare 
     mode text;
     ratio text;
     step_idx text;
@@ -133,7 +135,8 @@ begin
 end
 $$;
 
-create or replace procedure s_uncompress() language plpgsql as $$ declare 
+create or replace procedure s_uncompress() language plpgsql as $$
+declare 
     mode text;
 begin
     mode=current_mode();
@@ -144,7 +147,8 @@ begin
 end
 $$;
 
-create or replace procedure s_compress() language plpgsql as $$ declare 
+create or replace procedure s_compress() language plpgsql as $$
+declare 
     mode text;
     step_idx integer;
     p_segmentby float=.17;
@@ -201,7 +205,8 @@ end
 $$
 ;
 
-create or replace procedure s_column_rename() language plpgsql as $$ declare 
+create or replace procedure s_column_rename() language plpgsql as $$
+declare 
     state record;
     col text;
 begin
@@ -221,7 +226,8 @@ $$;
 
 
 
-create or replace procedure s_column_add_nullable() language plpgsql as $$ declare 
+create or replace procedure s_column_add_nullable() language plpgsql as $$
+declare 
     state record;
     col text;
 begin
@@ -230,7 +236,8 @@ begin
 end
 $$;
 
-create or replace procedure s_column_add_default() language plpgsql as $$ declare 
+create or replace procedure s_column_add_default() language plpgsql as $$
+declare 
     state record;
     col text;
 begin
@@ -239,17 +246,8 @@ begin
 end
 $$;
 
-
--- select :step+1 as step \gset
-
--- select :'current_mode' != 'normal' AND NOT is_hypertable(:'current_mode',:'table_name') as proceed \gset
-
--- \if :proceed
---     SELECT create_hypertable(:'table_name', 'time', chunk_time_interval => interval '12 hour', migrate_data=>true);
--- \endif
-
-
-create or replace procedure compare(t1 text,t2 text) language plpgsql as $$ declare 
+create or replace procedure compare(t1 text,t2 text) language plpgsql as $$
+declare 
     state record;
     col text;
     diff_count integer;
@@ -284,74 +282,3 @@ begin
     end if;
 end
 $$;
-
-
-
-
-call load(:'current_mode');
--- select load('normal');
-select :'current_mode';
-select current_mode();
--- select * from current_mode;
--- select set_var('asd','1234');
--- select set_var('asd','123');
--- select get_var('asd');
--- select set_var('table_name','readings');
--- select set_var('source_schema','devices_1');
--- select get_var('table_name');
-call s_hyper();
-call s_append();
-call s_uncompress();
-call s_compress();
-call s_append();
-call s_append();
-call s_append();
-call s_column_rename();
-call s_column_rename();
-call s_column_rename();
-call s_column_rename();
-call s_column_rename();
-call s_column_rename();
-call s_append();
-call s_column_add_nullable();
-call s_column_add_default();
-call s_column_add_default();
-call s_uncompress();
-call s_compress();
-
-\if :{?last_mode}
-
-call compare(:'last_mode',:'current_mode');
-
-\endif
-
--- \i steps/append.sql
--- \set step 11
--- \i steps/column_add_nullable.sql
--- \i steps/column_add_default.sql
--- \i steps/uncompress.sql
--- \i steps/compress.sql
-
-
--- drop schema if exists :current_mode cascade;
--- create schema :current_mode;
--- set search_path=:current_mode,public;
-
--- select *,t_normal or t_hyper or t_compressed as ok from (
---     select  :'current_mode' = 'normal' as t_normal,
---             :'current_mode' = 'hyper' as t_hyper,
---             :'current_mode' = 'compressed' as t_compressed
--- ) t \gset
-
--- -- select :t_normal or :t_hyper or :t_compressed as ok \gset
--- \if :ok
--- \else
---     DO $$ BEGIN RAISE EXCEPTION 'invalid mode: %',:'current_mode';END $$;
--- \endif
-
--- -- run the main test steps
--- \ir load.sql
--- \i test/:test
--- \ir cmp.sql
-
--- \set last_mode :current_mode
