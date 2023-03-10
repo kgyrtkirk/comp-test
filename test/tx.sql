@@ -117,7 +117,7 @@ begin
             where md5(extract(epoch from time)::text || step_idx) < ratio;
 
     -- push records into the future
-    update stage set time = time + (select max(time)-min(time) from stage) + INTERVAL '1 us' + INTERVAL '1 day';
+    update stage set time = time + ((select max(time) from main_table) - (select min(time) from stage)) + INTERVAL '1 us' + INTERVAL '1 day';
 
     insert into main_table select * from stage;
 
