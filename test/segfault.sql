@@ -2,7 +2,6 @@
 \i steps/append.sql
 -- \i steps/uncompress.sql
 \i steps/compress.sql
-\i steps/append.sql
 \set step 7
 \i steps/rename_column.sql
 \set step 10
