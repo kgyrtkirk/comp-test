@@ -122,7 +122,7 @@ begin
     ratio='1';
         -- start transaction;
     create temporary  table stage as
-        select * from main_table
+        select * from devices_1.readings-- main_table
             where md5(extract(epoch from time)::text || step_idx) < ratio;
 
     -- push records into the future
@@ -189,8 +189,6 @@ begin
 end
 $$;
 
-drop  function if exists step_state(name text);
--- create or replace function step_state(name text) returns table  ( mode text,step_idx integer) language plpgsql as $$
 create or replace function step_state(name text) returns record language plpgsql as $$
 declare
     ret record;
@@ -223,8 +221,6 @@ begin
 
 end
 $$;
-
-
 
 create or replace procedure s_column_add_nullable() language plpgsql as $$
 declare 
