@@ -1,5 +1,4 @@
 \i steps/hyper.sql
-\i steps/append.sql
 -- \i steps/uncompress.sql
 \i steps/compress.sql
 \set step 7
