@@ -3,8 +3,7 @@
 -- \i steps/uncompress.sql
 \i steps/compress.sql
 \i steps/append.sql
-\set step 5
-\i steps/rename_column.sql
+\set step 6
 \i steps/rename_column.sql
 \i steps/rename_column.sql
 \set step 10
