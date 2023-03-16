@@ -11,7 +11,7 @@
 \set step 10
 -- \i steps/append.sql
 -- \i steps/add_column_nullable.sql
-\i steps/add_column_default.sql
+-- \i steps/add_column_default.sql
 \i steps/column_drop.sql
 -- \i steps/uncompress.sql
 \set step 13
