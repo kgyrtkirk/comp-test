@@ -7,7 +7,6 @@
 \i steps/rename_column.sql
 \i steps/rename_column.sql
 \i steps/rename_column.sql
-\i steps/rename_column.sql
 \set step 10
 -- \i steps/append.sql
 -- \i steps/add_column_nullable.sql
