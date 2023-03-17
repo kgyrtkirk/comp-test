@@ -14,5 +14,6 @@ select compress_chunk(show_chunks(:'table_name'));
 
 alter table :current_mode.readings drop column battery_status;
 select * from readings;
-explain select count(1) over (partition by time,c),* from  :current_mode.readings c;
-select count(1) over (partition by time,c),* from  :current_mode.readings c;
+explain 
+select c from  :current_mode.readings c;
+select c from  :current_mode.readings c;
