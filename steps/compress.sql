@@ -22,5 +22,6 @@ select  :'current_mode' = 'compressed'
     select :'segmentby',:'orderby';
     
     ALTER TABLE :table_name SET (timescaledb.compress,timescaledb.compress_segmentby = :'segmentby',timescaledb.compress_orderby = :'orderby');
+explain    select compress_chunk(show_chunks(:'table_name'));
     select compress_chunk(show_chunks(:'table_name'));
 \endif

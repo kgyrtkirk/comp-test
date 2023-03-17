@@ -20,6 +20,7 @@
     select count(1) > 0 as diff_count from diff \gset
 
     \if :diff_count
+    -- select * from diff;
     DO $$ BEGIN RAISE EXCEPTION 'differences found: %',(select count(1) from diff);END $$;
     \else
     \endif
