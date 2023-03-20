@@ -41,7 +41,7 @@ new_session(c1,compressed)
 m4_define(seq,
 	$1_hyper
 	$1_append (*)
-	$1_append (*)
+	$1_compress
 	$2_append (*)
 	$1_column_add_default (*)
 	$1_nop
