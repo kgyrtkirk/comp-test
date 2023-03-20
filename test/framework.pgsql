@@ -4,7 +4,7 @@ returns text language sql as $$
     select current_setting('g.mode')
 $$;
 
-create or replace function current_mode()
+create or replace function current_schema()
 returns text language sql as $$
     select current_setting('g.schema')
 $$;
@@ -52,7 +52,7 @@ begin
     );
 
     raise notice 'TODO: use perform/etc here?';
-    create table main_table as select * from devices_1.readings r where false;
+    create table main_table as select * from devices_1.readings r;
     raise notice 'load: end';
 end
 $$;
@@ -89,7 +89,7 @@ declare
     msg text;
 begin
     mode=current_mode();
-    if mode != 'normal' AND NOT is_hypertable(mode,'main_table') then
+    if mode != 'normal' AND NOT is_hypertable(current_schema(),'main_table') then
         select create_hypertable('main_table', 'time', chunk_time_interval => interval '12 hour', migrate_data=>true) into msg;
         raise notice 'create_hypertable: %',msg;
     end if;
@@ -101,7 +101,7 @@ declare
     mode text;
 begin
     mode=current_mode();
-    if is_hypertable(mode,'main_table') then
+    if is_hypertable(current_schema(),'main_table') then
         -- https://stackoverflow.com/questions/57910070/convert-hypertable-to-regular-postgres-table
         start transaction;
         CREATE TABLE normal_table (LIKE main_table INCLUDING ALL);
@@ -126,7 +126,7 @@ begin
     ratio='1';
         -- start transaction;
     create temporary  table stage as
-        select * from devices_1.readings-- main_table
+        select * from main_table
             where md5(extract(epoch from time)::text || step_idx) < ratio;
 
     -- push records into the future
@@ -139,12 +139,49 @@ begin
 end
 $$;
 
+create or replace procedure s_delete() language plpgsql as $$
+declare 
+    state record;
+    ratio text;
+    num_deleted integer;
+begin
+    select * into state from step_state('delete') as f(mode text,step_idx integer);
+    ratio='1';
+
+    delete from main_table 
+        where md5(extract(epoch from time)::text || state.step_idx) <= ratio;
+
+    GET DIAGNOSTICS num_deleted = ROW_COUNT;
+    raise notice 'deleted % rows',num_deleted;
+
+end
+$$;
+
+create or replace procedure s_update() language plpgsql as $$
+declare 
+    state record;
+    ratio text;
+    num_deleted integer;
+begin
+    select * into state from step_state('update') as f(mode text,step_idx integer);
+    ratio='1';
+
+    -- update main_table 
+    --     set 
+    --     where md5(extract(epoch from time)::text || state.step_idx) <= ratio;
+    raise exception 'n/A';
+
+    GET DIAGNOSTICS num_deleted = ROW_COUNT;
+    raise notice 'deleted % rows',num_deleted;
+
+end
+$$;
+
 create or replace procedure s_uncompress() language plpgsql as $$
 declare 
     mode text;
 begin
-    mode=current_mode();
-    if is_compressed(mode,'main_table') then
+    if is_compressed(current_schema(),'main_table') then
         perform decompress_chunk(show_chunks('main_table'),true);
         ALTER TABLE main_table SET (timescaledb.compress=false);
     end if;
@@ -162,10 +199,11 @@ begin
     mode=current_mode();
     step_idx=get_var2('step_idx');
 
+    raise notice 'comp: %',mode;
 
     if  mode = 'compressed' 
-    AND is_hypertable(mode,'main_table')
-    AND NOT is_compressed(mode,'main_table') then
+    AND is_hypertable(current_schema(),'main_table')
+    AND NOT is_compressed(current_schema(),'main_table') then
 
     execute setseed(1.0/(step_idx+1));
     with g as (
