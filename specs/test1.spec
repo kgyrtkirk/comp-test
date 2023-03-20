@@ -26,7 +26,9 @@ step $1_begin { begin; }
 step $1_commit { commit; }
 
 step $1_nop {}
-step $1_cmp {	call compare('normal_0','compressed_0');}
+step $1_cmp {	
+	call create_diff('normal_0','compressed_0');
+	call compare('normal_0','compressed_0');}
 
 )
 
@@ -55,10 +57,6 @@ m4_define(seq,
 	$2_column_drop (*)
 	$1_append (*)
 	$1_column_add_default
-	$1_nop
-	$2_nop
-	$2_append (*)
-	$1_compress (*)
 	$1_nop
 	$2_nop
 	$2_append (*)
