@@ -46,9 +46,7 @@ m4_define(seq,
 	$1_nop
 	$2_nop
 	$1_uncompress
-	$2_delete (*)
 	$1_column_add_nullable (*)
-	$1_delete (*)
 	$2_uncompress
 	$1_append (*)
 	$2_compress (*)
@@ -58,12 +56,9 @@ m4_define(seq,
 	$1_column_add_default
 	$1_nop
 	$2_nop
-	$2_delete (*)
 	$1_compress (*)
-	$1_delete (*)
 	$1_nop
 	$2_nop
-	$2_delete (*)
 	$2_append (*)
 	$1_uncompress (*)
 	$1_nop
@@ -75,8 +70,6 @@ m4_define(seq,
 	$2_append (*)
 	$1_nop
 	$2_nop
-	$1_uncompress
-	$1_compress
 )
 
 permutation
