@@ -4,6 +4,11 @@ returns text language sql as $$
     select current_setting('g.mode')
 $$;
 
+create or replace function current_mode()
+returns text language sql as $$
+    select current_setting('g.schema')
+$$;
+
 create or replace function get_var2(key text)
 returns text language sql as $$
     select current_setting('g.'|| key)
@@ -14,17 +19,16 @@ create or replace procedure set_var2(key text,value text)
     select set_config('g.'|| key,value,false)
 $$;
 
-create or replace procedure switch_to(mode text) language plpgsql as $$
-declare 
-    _mode text;
+create or replace procedure switch_to(mode text, idx text) language plpgsql as $$
 begin
-    execute format('set search_path=%s,public',mode);
+    execute format('set search_path=%s_%s,public',mode,idx);
     perform set_config('g.mode',mode,false);
+    perform set_config('g.schema',mode || '_' || idx,false);
     call set_var2('step_idx','0');
 end
 $$;
 
-create or replace procedure load(mode text) language plpgsql as $$
+create or replace procedure load(mode text,idx text) language plpgsql as $$
 declare 
     _mode text;
 begin
@@ -33,10 +37,10 @@ begin
         raise EXCEPTION 'unknown mode: %', mode;
     end if;
 
-    execute format('drop schema if exists %s cascade',mode);
-    execute format('create schema %s',mode);
+    execute format('drop schema if exists %s_%s cascade',mode,idx);
+    execute format('create schema %s_%s',mode,idx);
 
-    call switch_to(mode);
+    call switch_to(mode,idx);
     -- perform format('create view current_mode as select %s',mode);
 
 
@@ -166,7 +170,7 @@ begin
     execute setseed(1.0/(step_idx+1));
     with g as (
         select column_name from hyper_columns
-            where table_schema = mode and table_name='main_table' and column_usage ='normal'
+            where table_schema = current_schema() and table_name='main_table' and column_usage ='normal'
         order by column_name
     ),
     h as (select random() v,column_name from g)
@@ -193,6 +197,7 @@ create or replace function step_state(name text) returns record language plpgsql
 declare
     ret record;
     step integer;
+    schema text;
 begin
     step=get_var2('step_idx')::integer + 1;
     call set_var2('step_idx',step::text);
@@ -214,7 +219,7 @@ begin
     perform setseed(1.0/(state.step_idx));
 
     select column_name into col from hyper_columns
-        where table_schema = state.mode and table_name='main_table' -- and column_usage ='normal'
+        where table_schema = current_schema() and table_name='main_table' -- and column_usage ='normal'
         order by random() limit 1;
 
     execute format('alter table main_table rename %s to new_col_%s',col,state.step_idx);

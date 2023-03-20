@@ -2,16 +2,16 @@
 setup {
 	m4_include(test/framework.pgsql)
 
-	call load('normal');
-	call load('hyper');
-	call load('compressed');
+	call load('normal','0');
+	call load('hyper','0');
+	call load('compressed','0');
 }
 
 m4_define(call_step,step s$1_$2	{ call s_$2(); })
 m4_define(`new_session',
 session s$1_$2
 setup {
-	call switch_to('$2');
+	call switch_to('$2','0');
 }
 call_step($1,append)
 call_step($1,hyper)
@@ -20,8 +20,9 @@ call_step($1,compress)
 call_step($1,uncompress)
 call_step($1,column_add_default)
 call_step($1,column_add_nullable)
+
 step s$1_nop {}
-step s$1_cmp {	call compare('normal','compressed');}
+step s$1_cmp {	call compare('normal_0','compressed_0');}
 
 )
 
@@ -49,7 +50,10 @@ m4_define(seq,
 	$1_nop
 	$2_nop
 	$1_uncompress
+	$1_nop
+	$2_nop
 	$1_append (*)
+	$2_append (*)
 	$2_compress (*)
 	$1_nop
 	$2_nop
