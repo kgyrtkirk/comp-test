@@ -35,41 +35,41 @@ step $1_cmp {
 
 new_session(n0,normal)
 new_session(n1,normal)
-new_session(c0,hyper)
-new_session(c1,hyper)
+new_session(c0,compressed)
+new_session(c1,compressed)
 
 
 m4_define(seq,
 	$1_hyper
-	$1_append (*)
+	$1_append
 	$1_compress
-	$2_append (*)
-	$1_column_add_default (*)
+	$2_append
+	$1_column_add_default
 	$1_nop
 	$2_nop
-	$1_append (*)
-	$2_uncompress (*)
+	$1_append 
+	$2_uncompress 
 	$1_unhyper
 	$1_nop
 	$2_nop
 	$2_hyper
-	$1_compress (*)
-	$2_append (*)
-	$2_column_drop (*)
-	$1_append (*)
+	$1_compress 
+	$2_append 
+	$2_column_drop
+	$1_append 
 	$1_column_add_default
 	$1_nop
 	$2_nop
-	$2_append (*)
-	$1_uncompress (*)
+	$2_append
+	$1_uncompress 
 	$1_nop
 	$2_nop
-	$1_uncompress (*)
-	$2_append (*)
-	$1_column_add_default (*)
-	$2_compress (*)
-	$1_column_drop (*)
-	$2_append (*)
+	$1_uncompress 
+	$2_append 
+	$1_column_add_default
+	$2_compress
+	$1_column_drop
+	$2_append
 	$1_nop
 	$2_nop
 )
