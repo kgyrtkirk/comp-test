@@ -231,20 +231,22 @@ $$;
 
 create or replace procedure s_compress() language plpgsql as $$
 declare 
-    state record;
+    mode text;
+    step_idx integer;
     p_segmentby float=.17;
     p_orderby float=.13;
     compress_options record;
 begin
-    select * into state from step_state('compress') as f(mode text,step_idx integer);
+    mode=current_mode();
+    step_idx=get_var2('step_idx');
 
-    raise notice 'comp: %',current_mode();
+    raise notice 'comp: %',mode;
 
-    if  state.mode = 'compressed' 
+    if  mode = 'compressed' 
     AND is_hypertable(current_schema(),'main_table')
     AND NOT is_compressed(current_schema(),'main_table') then
 
-    execute setseed(1.0/(state.step_idx+1));
+    execute setseed(1.0/(step_idx+1));
     with g as (
         select column_name from hyper_columns
             where table_schema = current_schema() and table_name='main_table' and column_usage ='normal'

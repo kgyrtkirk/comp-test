@@ -44,11 +44,10 @@ m4_define(seq,
 	$1_append
 	$1_compress
 	$2_append
-	$1_column_add_default
+	$1_blank
 	$1_nop
 	$2_nop
 	$1_append 
-	$2_uncompress 
 	$1_unhyper
 	$1_nop
 	$2_nop
@@ -68,7 +67,6 @@ m4_define(seq,
 	$2_append 
 	$1_column_add_default
 	$2_compress
-	$1_column_drop
 	$2_append
 	$1_nop
 	$2_nop
