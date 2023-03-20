@@ -344,6 +344,15 @@ begin
 end
 $$;
 
+create or replace procedure s_blank() language plpgsql as $$
+declare 
+    state record;
+    col text;
+begin
+    select * into state from step_state('column_rename') as f(mode text,step_idx integer);
+end
+$$;
+
 create or replace procedure create_diff(t1 text,t2 text) language plpgsql as $$
 declare 
     state record;

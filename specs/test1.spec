@@ -22,6 +22,7 @@ call_step($1,uncompress)
 call_step($1,column_add_default)
 call_step($1,column_add_nullable)
 call_step($1,column_drop)
+call_step($1,blank)
 step $1_begin { begin; }
 step $1_commit { commit; }
 
@@ -34,8 +35,8 @@ step $1_cmp {
 
 new_session(n0,normal)
 new_session(n1,normal)
-new_session(c0,compressed)
-new_session(c1,compressed)
+new_session(c0,hyper)
+new_session(c1,hyper)
 
 
 m4_define(seq,
