@@ -52,7 +52,7 @@ begin
     );
 
     raise notice 'TODO: use perform/etc here?';
-    create table main_table as select * from devices_1.readings;
+    create table main_table as select * from devices_1.readings r where false;
     raise notice 'load: end';
 end
 $$;
@@ -244,6 +244,36 @@ declare
 begin
     select * into state from step_state('column_rename') as f(mode text,step_idx integer);
     execute format('alter table main_table add column new_col_%s integer not null default %s',state.step_idx,state.step_idx);
+end
+$$;
+
+create or replace procedure create_diff(t1 text,t2 text) language plpgsql as $$
+declare 
+    state record;
+    col text;
+    diff_count integer;
+begin
+    drop table if exists diff;
+    drop view if exists diff_l;
+    drop view if exists diff_r;
+    execute format('create view diff_l as select * from %s.main_table',t1);
+    execute format('create view diff_r as select * from %s.main_table',t2);
+
+    create table diff as
+    with
+        c as (select count(1) over (partition by time,c),* from diff_l c),
+        l as (select count(1) over (partition by time,c),* from diff_r c)
+    (
+            select * from c
+        except
+            select * from l
+    )
+    union all
+    (
+            select * from l
+        except
+            select * from c
+    );
 end
 $$;
 

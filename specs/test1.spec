@@ -21,45 +21,26 @@ call_step($1,uncompress)
 call_step($1,column_add_default)
 call_step($1,column_add_nullable)
 
-step s$1_nop {}
-step s$1_cmp {	call compare('normal_0','compressed_0');}
+step s$1_nop {	}
+step s$1_cmp {	call compare('normal_0','hyper_0');}
 
 )
 
 new_session(0,normal)
-new_session(1,compressed)
-new_session(2,compressed)
+new_session(1,normal)
+new_session(2,hyper)
+new_session(3,hyper)
 
 
 m4_define(seq,
 	$1_hyper
-	$1_append (*)
-	$2_append (*)
-	$1_compress
 	$1_column_add_default
 	$1_nop
 	$2_nop
-	$1_append (*)
-	$2_uncompress (*)
-	$1_nop
-	$2_nop
-	$1_uncompress
-	$2_uncompress
-	$1_append (*)
-	$2_compress (*)
-	$1_nop
-	$2_nop
-	$1_uncompress
-	$1_nop
-	$2_nop
-	$1_append (*)
-	$2_append (*)
-	$2_compress (*)
-	$1_nop
-	$2_nop
+	$2_append 
 )
 
 permutation
-	seq(s0,s0)
-	seq(s1,s2)
+	seq(s0,s1)
+	seq(s2,s3)
 	s0_cmp
