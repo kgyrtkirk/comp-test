@@ -7,9 +7,9 @@ setup {
 	call load('compressed','0');
 }
 
-m4_define(call_step,step s$1_$2	{ call s_$2(); })
+m4_define(call_step,step $1_$2	{ call s_$2(); })
 m4_define(`new_session',
-session s$1_$2
+session $1_$2
 setup {
 	call switch_to('$2','0');
 }
@@ -22,18 +22,18 @@ call_step($1,uncompress)
 call_step($1,column_add_default)
 call_step($1,column_add_nullable)
 call_step($1,column_drop)
-step s$1_begin { begin; }
-step s$1_commit { commit; }
+step $1_begin { begin; }
+step $1_commit { commit; }
 
-step s$1_nop {}
-step s$1_cmp {	call compare('normal_0','compressed_0');}
+step $1_nop {}
+step $1_cmp {	call compare('normal_0','compressed_0');}
 
 )
 
-new_session(0,normal)
-new_session(1,normal)
-new_session(2,compressed)
-new_session(3,compressed)
+new_session(n0,normal)
+new_session(n1,normal)
+new_session(c0,compressed)
+new_session(c1,compressed)
 
 
 m4_define(seq,
@@ -80,6 +80,6 @@ m4_define(seq,
 )
 
 permutation
-	seq(s0,s1)
-	seq(s2,s3)
-	s0_cmp
+	seq(n0,n1)
+	seq(c0,c1)
+	n0_cmp
