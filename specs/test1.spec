@@ -21,6 +21,9 @@ call_step($1,compress)
 call_step($1,uncompress)
 call_step($1,column_add_default)
 call_step($1,column_add_nullable)
+call_step($1,column_drop)
+step s$1_begin { begin; }
+step s$1_commit { commit; }
 
 step s$1_nop {}
 step s$1_cmp {	call compare('normal_0','compressed_0');}
@@ -43,19 +46,22 @@ m4_define(seq,
 	$2_nop
 	$1_append (*)
 	$2_uncompress (*)
+	$1_unhyper
 	$1_nop
 	$2_nop
-	$1_uncompress
-	$1_column_add_nullable (*)
-	$2_uncompress
+	$2_hyper
+	$1_begin
+	$1_compress (*)
+	$2_begin 
+	$1_commit
+	$2_append (*)
+	$2_column_drop (*)
+	$2_commit
 	$1_append (*)
-	$2_compress (*)
-	$1_nop
-	$2_nop
-	$1_uncompress
 	$1_column_add_default
 	$1_nop
 	$2_nop
+	$2_append (*)
 	$1_compress (*)
 	$1_nop
 	$2_nop
@@ -65,8 +71,9 @@ m4_define(seq,
 	$2_nop
 	$1_uncompress (*)
 	$2_append (*)
-	$2_compress (*)
 	$1_column_add_default (*)
+	$2_compress (*)
+	$1_column_drop (*)
 	$2_append (*)
 	$1_nop
 	$2_nop

@@ -53,6 +53,7 @@ begin
 
     raise notice 'TODO: use perform/etc here?';
     create table main_table as select * from devices_1.readings r;
+    create unique index xm on main_table(device_id,time);
     raise notice 'load: end';
 end
 $$;
@@ -156,6 +157,46 @@ begin
 
 end
 $$;
+
+-- create or replace procedure s_insert_on_conflict_update() language plpgsql as $$
+-- declare 
+--     state record;
+--     ratio text;
+--     num_deleted integer;
+-- begin
+--     select * into state from step_state('s_insert_on_conflict_update') as f(mode text,step_idx integer);
+--     ratio='1';
+
+--     execute setseed(1.0/(step_idx+1));
+--     with g as (
+--         select column_name from hyper_columns
+--             where table_schema = current_schema() and table_name='main_table' 
+--         order by column_name
+--     ),
+--     h as (select random() v,column_name from g)
+--     i as (select column_name from g where v<.3)
+
+--     select 
+--         (select coalesce(string_agg(column_name,','),'') from h where v<p_segmentby) as segmentby,
+--         (select coalesce(string_agg(column_name,','),'') from h where v between p_segmentby and p_segmentby + p_orderby) as orderby
+--             into compress_options;
+
+--     raise notice 'compress options: segmentby=% , orderby=% ',compress_options.segmentby,compress_options.orderby;
+
+--     execute format('
+--         ALTER TABLE main_table SET (
+--             timescaledb.compress,
+--             timescaledb.compress_segmentby = ''%s'',
+--             timescaledb.compress_orderby = ''%s'')',compress_options.segmentby,compress_options.orderby);
+
+
+
+--     GET DIAGNOSTICS num_deleted = ROW_COUNT;
+--     raise notice 'deleted % rows',num_deleted;
+
+-- end
+-- $$;
+
 
 create or replace procedure s_update() language plpgsql as $$
 declare 
@@ -262,6 +303,24 @@ begin
 
     execute format('alter table main_table rename %s to new_col_%s',col,state.step_idx);
 
+end
+$$;
+
+create or replace procedure s_column_drop() language plpgsql as $$
+declare 
+    state record;
+    col_name text;
+begin
+    select * into state from step_state('column_drop') as f(mode text,step_idx integer);
+
+    with t as (
+    select md5(column_name || state.step_idx) as r,column_name as column_name from hyper_columns
+            where table_schema = current_schema() and table_name='main_table'
+    )
+    select column_name into col_name from t order by r limit 1;
+
+    raise notice 'drop column: %',col_name;
+    execute format('alter table main_table drop column %s',col_name);
 end
 $$;
 
