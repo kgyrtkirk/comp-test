@@ -97,7 +97,8 @@ begin
 end
 $$;
 
-create or replace function s_unhyper() returns text language plpgsql volatile as $$
+
+create or replace procedure s_unhyper() language plpgsql as $$
 declare 
     mode text;
 begin
@@ -111,7 +112,6 @@ begin
         ALTER TABLE normal_table RENAME TO main_table;
         commit;
     end if;
-    return 'unhyper';
 end
 $$;
 
@@ -231,22 +231,20 @@ $$;
 
 create or replace procedure s_compress() language plpgsql as $$
 declare 
-    mode text;
-    step_idx integer;
+    state record;
     p_segmentby float=.17;
     p_orderby float=.13;
     compress_options record;
 begin
-    mode=current_mode();
-    step_idx=get_var2('step_idx');
+    select * into state from step_state('compress') as f(mode text,step_idx integer);
 
-    raise notice 'comp: %',mode;
+    raise notice 'comp: %',current_mode();
 
-    if  mode = 'compressed' 
+    if  state.mode = 'compressed' 
     AND is_hypertable(current_schema(),'main_table')
     AND NOT is_compressed(current_schema(),'main_table') then
 
-    execute setseed(1.0/(step_idx+1));
+    execute setseed(1.0/(state.step_idx+1));
     with g as (
         select column_name from hyper_columns
             where table_schema = current_schema() and table_name='main_table' and column_usage ='normal'
