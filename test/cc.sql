@@ -10,10 +10,15 @@ select current_mode();
 -- select set_var('source_schema','devices_1');
 -- select get_var('table_name');
 alter table main_table drop column battery_level;
-alter table main_table drop column battery_status;
+-- alter table main_table drop column battery_status;
 alter table main_table drop column battery_temperature;
+
 -- alter table main_table drop column cpu_avg_1min;
 -- alter table main_table drop column cpu_avg_15min;
+-- alter table main_table drop column ssid;
+-- alter table main_table drop column mem_free;
+-- alter table main_table drop column mem_used;
+-- alter table main_table drop column bssid;
 call s_hyper();
 -- call s_append();
 -- call s_uncompress();
