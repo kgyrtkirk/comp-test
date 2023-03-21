@@ -3,7 +3,7 @@ setup {
 	m4_include(test/framework.pgsql)
 
 	call load('normal','0');
-	call load('hyper','0');
+	call load('hyper','0');  
 	call load('compressed','0');
 }
 
@@ -48,7 +48,6 @@ m4_define(seq,
 	$1_nop
 	$2_nop
 	$1_append 
-	$1_unhyper
 	$1_nop
 	$2_nop
 	$2_hyper
@@ -60,7 +59,6 @@ m4_define(seq,
 	$1_nop
 	$2_nop
 	$2_append
-	$1_uncompress 
 	$1_nop
 	$2_nop
 	$1_uncompress 
