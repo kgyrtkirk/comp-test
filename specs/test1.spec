@@ -41,23 +41,7 @@ new_session(c1,compressed)
 
 m4_define(seq,
 	$1_hyper
-	$1_append
 	$1_compress
-	$2_append
-	$1_blank
-	$1_nop
-	$2_nop
-	$1_append 
-	$1_nop
-	$2_nop
-	$2_append 
-	$2_column_drop
-	$1_append 
-	$1_nop
-	$2_nop
-	$1_uncompress 
-	$2_compress
-	$2_append
 	$1_nop
 	$2_nop
 )

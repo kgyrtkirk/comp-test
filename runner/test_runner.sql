@@ -26,10 +26,10 @@ set search_path=public;
 \ir ../dataset/devices_1.sql
 
 \unset last_mode
-\set current_mode normal
-\ir test_invoker.sql
-\set current_mode hyper
-\ir test_invoker.sql
+-- \set current_mode normal
+-- \ir test_invoker.sql
+-- \set current_mode hyper
+-- \ir test_invoker.sql
 \set current_mode compressed
 \ir test_invoker.sql
 

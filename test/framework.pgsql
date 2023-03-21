@@ -53,10 +53,11 @@ begin
 
     
     raise notice 'TODO: use perform/etc here?';
-    create table main_table as select * from devices_1.readings r;
-    -- create table main_table as select * from devices_1.readings r where md5(time || ' ') <= 'd';
-    --create table main_table as select * from devices_1.readings r where time < (select min(time)+(max(time)-min(time))/2 from devices_1.readings);
-    create unique index xm on main_table(device_id,time);
+     create table main_table as select * from devices_1.readings r;
+--    create table main_table as select * from devices_1.readings r where md5(time || ' ') <= 'f';
+    
+--    create table main_table as select * from devices_1.readings r where time < (select min(time)+(max(time)-min(time))/2 from devices_1.readings);
+--    create unique index xm on main_table(device_id,time);
     raise notice 'load: end';
 end
 $$;
