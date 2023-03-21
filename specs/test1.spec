@@ -51,7 +51,6 @@ m4_define(seq,
 	$1_nop
 	$2_nop
 	$2_hyper
-	$1_compress 
 	$2_append 
 	$2_column_drop
 	$1_append 
