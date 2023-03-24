@@ -25,6 +25,9 @@ call_step($1,column_drop)
 call_step($1,blank)
 step $1_begin { begin; }
 step $1_commit { commit; }
+step $1_appendx { insert into compressed_0.main_table select * from compressed_0.main_table where device_id = 'demo000148' and time='2016-11-29 11:34:30.000011+00'; }
+step $1_append2 { select get_var2('step_idx');call s_append('1'); }
+
 
 step $1_nop {}
 step $1_cmp {	
@@ -41,20 +44,18 @@ new_session(c1,compressed)
 
 m4_define(seq,
 	$1_hyper
-	$1_compress
 	$1_append
-	$1_blank
-	$1_compress
 	$2_append
-	$1_append 
-	$2_append 
-	$2_column_drop
-	$1_append 
+	$1_append2
+	$2_append
+	$2_blank
+	$1_append2
 	$1_nop
 	$2_nop
-	$1_uncompress 
 	$2_compress
-	$2_append
+	$1_nop
+	$2_nop
+	$1_append2
 	$1_nop
 	$2_nop
 )

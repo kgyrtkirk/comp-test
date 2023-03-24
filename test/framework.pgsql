@@ -120,14 +120,18 @@ end
 $$;
 
 
-create or replace procedure s_append() language plpgsql as $$
+drop procedure if exists s_append(integer);
+drop procedure if exists s_append();
+create or replace procedure s_append(step_idx text default null) language plpgsql as $$
 declare 
     mode text;
     ratio text;
-    step_idx text;
+    --step_idx text;
 begin
     mode=current_mode();
+    if step_idx is null then
     step_idx=get_var2('step_idx');
+    end if;
     ratio='1';
         -- start transaction;
     create temporary  table stage as
@@ -399,7 +403,7 @@ begin
 
     if diff_count > 0 then
         -- perform select * from diff d order by d limit 4;
-        RAISE EXCEPTION 'differences found: %',diff_count;
+       RAISE EXCEPTION 'differences found: %',diff_count;
     end if;
 end
 $$;
