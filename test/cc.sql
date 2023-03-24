@@ -19,11 +19,14 @@ alter table main_table drop column battery_temperature;
 -- alter table main_table drop column mem_free;
 -- alter table main_table drop column mem_used;
 -- alter table main_table drop column bssid;
+select count(1) from main_table;
 call s_hyper();
 -- call s_append();
 -- call s_uncompress();
 \d main_table
 
+--    ALTER TABLE main_table SET (timescaledb.compress,timescaledb.compress_segmentby = 'cpu_avg_5min',timescaledb.compress_orderby = 'rssi');
+--    delete from main_table where md5(cpu_avg_5min || ' ') <= '8';
     ALTER TABLE main_table SET (timescaledb.compress,timescaledb.compress_segmentby = 'cpu_avg_5min',timescaledb.compress_orderby = 'rssi');
     select compress_chunk(show_chunks('main_table'));
 
