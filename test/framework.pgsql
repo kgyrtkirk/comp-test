@@ -244,6 +244,7 @@ declare
     p_segmentby float=.17;
     p_orderby float=.13;
     compress_options record;
+    cmd text;
 begin
     mode=current_mode();
     step_idx=get_var2('step_idx');
@@ -268,11 +269,13 @@ begin
 
     raise notice 'compress options: segmentby=% , orderby=% ',compress_options.segmentby,compress_options.orderby;
 
-    execute format('
+    select format('
         ALTER TABLE main_table SET (
             timescaledb.compress,
             timescaledb.compress_segmentby = ''%s'',
-            timescaledb.compress_orderby = ''%s'')',compress_options.segmentby,compress_options.orderby);
+            timescaledb.compress_orderby = ''%s'')',compress_options.segmentby,compress_options.orderby) into cmd;
+    raise notice '%',cmd;
+    execute cmd;
 
         perform compress_chunk(show_chunks('main_table'));
     end if;

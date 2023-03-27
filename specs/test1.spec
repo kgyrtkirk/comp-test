@@ -26,7 +26,15 @@ call_step($1,blank)
 step $1_begin { begin; }
 step $1_commit { commit; }
 step $1_appendx { insert into compressed_0.main_table select * from compressed_0.main_table where device_id = 'demo000148' and time='2016-11-29 11:34:30.000011+00'; }
+step $1_append0 { select get_var2('step_idx');call s_append('0'); }
 step $1_append2 { select get_var2('step_idx');call s_append('1'); }
+step $1_compress2 {         ALTER TABLE main_table SET (
+            timescaledb.compress,
+            timescaledb.compress_segmentby = 'battery_temperature,bssid,cpu_avg_5min,device_id',
+            timescaledb.compress_orderby = '')
+;
+select compress_chunk(show_chunks('main_table'));
+ }
 
 
 step $1_nop {}
@@ -44,15 +52,14 @@ new_session(c1,compressed)
 
 m4_define(seq,
 	$1_hyper
-	$1_append
-	$1_append
+	$1_append0
+	$1_append0
 	$1_append2
-	$1_append
-	$2_blank
+	$1_append0
 	$1_append2
 	$1_nop
 	$2_nop
-	$2_compress
+	$1_compress2
 	$1_nop
 	$2_nop
 	$1_append2
