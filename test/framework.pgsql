@@ -134,6 +134,7 @@ begin
     end if;
     ratio='1';
         -- start transaction;
+        drop table if exists stage;
     create temporary  table stage as
         select * from main_table
             where md5(extract(epoch from time)::text || step_idx) < ratio;
@@ -144,6 +145,30 @@ begin
     insert into main_table select * from stage;
 
     drop table stage;
+    -- commit;
+end
+$$;
+
+create or replace procedure s_append0(step_idx text default null) language plpgsql as $$
+declare 
+    mode text;
+    ratio text;
+    --step_idx text;
+begin
+    mode=current_mode();
+    if step_idx is null then
+    step_idx=get_var2('step_idx');
+    end if;
+    ratio='1';
+        -- start transaction;
+        drop table if exists stage;
+    create  table stage as
+        select * from main_table
+            where md5(extract(epoch from time)::text || step_idx) < ratio;
+
+    -- push records into the future
+    update stage set time = time + (select max(time)-min(time) from stage) + INTERVAL '1 us' + INTERVAL '1 day';
+
     -- commit;
 end
 $$;
